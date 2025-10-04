@@ -1,69 +1,45 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
-# CNN Model Definition
-class CNN(nn.Module):
+class FinalCNN(nn.Module):
     def __init__(self, num_classes=10):
-        super(CNN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, num_classes)
+        super(FinalCNN, self).__init__()
+        # Layer 1: Conv2D -> ReLU -> MaxPooling2D
+        # Input: 64x64x3 -> Conv: 64x64x16 -> Pool: 32x32x16
+        self.conv_layer1 = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+        
+        # Layer 2: Conv2D -> ReLU -> MaxPooling2D
+        # Input: 32x32x16 -> Conv: 32x32x32 -> Pool: 16x16x32
+        self.conv_layer2 = nn.Sequential(
+            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+        
+        # The flattened size of the volume after the second pool is 16 * 16 * 32 = 8192
+        # Fully Connected Layers
+        self.fc_layer = nn.Sequential(
+            nn.Linear(16 * 16 * 32, 100),
+            nn.ReLU(),
+            nn.Linear(100, num_classes)
+        )
 
     def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(-1, 16 * 5 * 5)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = self.conv_layer1(x)
+        x = self.conv_layer2(x)
+        # Flatten the output for the FC layer
+        x = x.view(-1, 16 * 16 * 32)
+        x = self.fc_layer(x)
         return x
 
-# EnhancedCNN Model Definition
-class EnhancedCNN(nn.Module):
-    def __init__(self, num_classes=10):
-        super(EnhancedCNN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)
-        self.bn1 = nn.BatchNorm2d(6)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.bn2 = nn.BatchNorm2d(16)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.dropout = nn.Dropout(0.5)
-        self.fc3 = nn.Linear(84, num_classes)
-
-    def forward(self, x):
-        x = self.pool(F.relu(self.bn1(self.conv1(x))))
-        x = self.pool(F.relu(self.bn2(self.conv2(x))))
-        x = x.view(-1, 16 * 5 * 5)
-        x = F.relu(self.fc1(x))
-        x = self.dropout(x)
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
-
-# Model Factory Function
-def get_model(model_name, num_classes=10):
-    """
-    Returns an instance of the specified model.
-
-    Args:
-        model_name (str): The name of the model to return.
-                          Options: "CNN", "EnhancedCNN".
-        num_classes (int): The number of output classes for the model.
-
-    Returns:
-        An instance of the requested torch.nn.Module.
-    """
-    if model_name.lower() == 'cnn':
-        model = CNN(num_classes=num_classes)
-    elif model_name.lower() == 'enhancedcnn':
-        model = EnhancedCNN(num_classes=num_classes)
-    
+def get_model(model_name="FinalCNN", num_classes=10):
+    if model_name.lower() == 'finalcnn':
+        model = FinalCNN(num_classes=num_classes)
     else:
-        raise ValueError(f"Model '{model_name}' not recognized.")
+        raise ValueError(f"Model '{model_name}' not recognized. Use 'FinalCNN'.")
     
     return model

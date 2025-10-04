@@ -2,34 +2,24 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 
-def get_data_loader(root_dir='./data', batch_size=64, train=True):
-    """
-    Creates a data loader for the CIFAR-10 dataset.
+def get_data_loader(dataset='cifar10', root_dir='./data', batch_size=64, train=True):
+    if dataset.lower() == 'cifar10':
+        transform = transforms.Compose([
+            transforms.Resize((64, 64)), 
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
+        dataset_loader = torchvision.datasets.CIFAR10(root=root_dir, train=train,
+                                                    download=True, transform=transform)
 
-    Args:
-        root_dir (str): The directory where the dataset will be stored.
-        batch_size (int): The number of samples per batch.
-        train (bool): If True, creates the training data loader. 
-                      Otherwise, creates the test data loader.
+    elif dataset.lower() == 'mnist':
+        transform = transforms.ToTensor()
+        dataset_loader = torchvision.datasets.MNIST(root=root_dir, train=train,
+                                                   download=True, transform=transform)
+    else:
+        raise ValueError("Dataset not supported. Choose 'cifar10' or 'mnist'.")
 
-    Returns:
-        A torch.utils.data.DataLoader for the CIFAR-10 dataset.
-    """
-    # Converts images to PyTorch Tensors and normalizes the pixel values.
-    transform = transforms.Compose(
-        [transforms.ToTensor(),
-         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-
-    # Download and load the appropriate CIFAR-10 dataset (train or test)
-    dataset = torchvision.datasets.CIFAR10(root=root_dir, 
-                                           train=train,
-                                           download=True, 
-                                           transform=transform)
-
-    # Create the DataLoader, which groups the data into batches and shuffles it
-    data_loader = torch.utils.data.DataLoader(dataset, 
-                                              batch_size=batch_size,
-                                              shuffle=train, # Only shuffle for the training set
-                                              num_workers=2)
+    data_loader = torch.utils.data.DataLoader(dataset_loader, batch_size=batch_size,
+                                              shuffle=train, num_workers=2)
 
     return data_loader
