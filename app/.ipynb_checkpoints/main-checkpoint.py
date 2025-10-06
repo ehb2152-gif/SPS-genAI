@@ -1,64 +1,64 @@
 from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
-import io
-from app.bigram_model import BigramModel
-from app.image_classifier import get_prediction
 
-app = FastAPI(title="Multi-Model API")
+from app import bigram_model 
+from app import image_classifier
 
-# Bigram Model Initialization
-corpus = [
-    "The Count of Monte Cristo is a novel written by Alexandre Dumas. \
-It tells the story of Edmond Dantès, who is falsely imprisoned and later seeks revenge.",
-    "this is another example sentence",
-    "we are generating text based on bigram probabilities",
-    "bigram models are simple but effective"
-]
-bigram_model = BigramModel()
-bigram_model.train_model(" ".join(corpus))
+app = FastAPI(title="Assignment API")
 
-class TextGenerationRequest(BaseModel):
-    start_word: str
-    length: int
+# Pydantic models for request bodies
+class WordRequest(BaseModel):
+    word: str
 
 class WordSimilarityRequest(BaseModel):
     word: str
     top_n: int
 
-# API Endpoints
-
-@app.get("/")
+@app.get(
+    "/",
+    summary="Root Endpoint",
+)
 def read_root():
-    return {"message": "Welcome to the Multi-Model API! Visit /docs for details."}
+    """A simple root endpoint to confirm the API is running."""
+    return {"message": "Welcome! This API provides image classification and word embedding services."}
 
-# Image Classification Endpoint
-@app.post("/classify_image/", response_model=dict)
+@app.post(
+    "/classify_image/",
+    response_model=dict,
+    summary="Classify an Image (Assignment 2)",
+)
 async def classify_image(file: UploadFile = File(...)):
     """
-    Accepts an image file, classifies it using the trained CNN,
-    and returns the predicted class.
+    Upload an image (JPG, PNG, etc.) to have the trained CNN model classify it
+    into one of the 10 CIFAR-10 classes: plane, car, bird, cat, deer, dog, frog,
+    horse, ship, or truck.
     """
-    # Read the image bytes from the uploaded file
     image_bytes = await file.read()
-    
-    # Get the prediction from the image_classifier module
-    predicted_class = get_prediction(image_bytes)
-    
+    predicted_class = image_classifier.get_prediction(image_bytes)
     return {"filename": file.filename, "predicted_class": predicted_class}
 
-
-# Original Bigram Model Endpoints
-@app.post("/generate_text")
-def generate_text(request: TextGenerationRequest):
-    try:
-        generated_text = bigram_model.generate_text(request.start_word, request.length)
-        return {"generated_text": generated_text}
-    except AttributeError:
-        return {"error": "generate_text method not found in BigramModel."}
-
-@app.post("/similar_words")
+@app.post(
+    "/get_embedding/",
+    response_model=dict,
+    summary="Get Word Embedding (Assignment 1)",
+)
+def get_embedding(request: WordRequest):
+    """
+    Provide a single word in the request body to receive its 300-dimensional
+    vector embedding from the spaCy model.
+    """
+    result = bigram_model.get_embedding(request.word)
+    return result
+    
+@app.post(
+    "/similar_words",
+    summary="Find Similar Words (Assignment 1)",
+)
 def get_similar_words(request: WordSimilarityRequest):
-    if not bigram_model.spacy_available:
-        return {"error": "spaCy model not available."}
+    """
+    Provide a word and a number `top_n` to find the `n` most semantically
+    similar words from a predefined vocabulary, based on the cosine similarity
+    of their vector embeddings.
+    """
     results = bigram_model.get_similar_words(request.word, request.top_n)
     return {"input_word": request.word, "similar_words": results}
