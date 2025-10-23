@@ -1,8 +1,10 @@
 from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
+from fastapi.responses import StreamingResponse  # <-- Added for Assignment 3
 
 from app import bigram_model 
 from app import image_classifier
+from app import generator  
 
 app = FastAPI(title="Assignment API")
 
@@ -62,3 +64,18 @@ def get_similar_words(request: WordSimilarityRequest):
     """
     results = bigram_model.get_similar_words(request.word, request.top_n)
     return {"input_word": request.word, "similar_words": results}
+
+@app.get(
+    "/generate_digit/",
+    response_class=StreamingResponse,
+    summary="Generate a Hand-Written Digit (Assignment 3)",
+)
+def generate_digit():
+    """
+    Calls the trained GAN Generator model to produce a new 28x28
+    image of a hand-written digit. Returns the image as a PNG.
+    """
+    image_buffer = generator.generate_digit_image()
+    
+    # Return the image buffer as a streaming response with the correct media type
+    return StreamingResponse(image_buffer, media_type="image/png")

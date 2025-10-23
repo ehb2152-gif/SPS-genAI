@@ -1,27 +1,23 @@
-# Use the stable Miniconda base image
-FROM continuumio/miniconda3:latest
+# Use an official Python runtime as a parent image
+FROM python:3.12-slim
 
-# Set the working directory
-WORKDIR /code
+# Set the working directory in the container
+WORKDIR /app
 
-# 1. Create environment and install all necessary dependencies
-RUN conda install -y \
-    python=3.12 \
-    fastapi \
-    uvicorn \
-    numpy=1.26 \
-    spacy \
-    pytorch \
-    torchvision \
-    pillow \
-    -c conda-forge -c pytorch && \
-    conda clean --all -f -y
+# Install build tools (like g++) needed to compile packages like 'thinc'
+RUN apt-get update && apt-get install -y build-essential
 
-# 2. Download and install the spaCy model
-RUN /opt/conda/bin/python -m pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.7.0/en_core_web_lg-3.7.0-py3-none-any.whl
+# Copy the requirements file into the container first
+COPY requirements.txt .
 
-# 3. Copy application files
-COPY app/ ./app
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# 4. Command to run the application
-CMD ["/opt/conda/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+# Download the correct spaCy model
+RUN python -m spacy download en_core_web_md
+
+# Copy the rest of the application code, including the trained models
+COPY . .
+
+# Command to run the application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]

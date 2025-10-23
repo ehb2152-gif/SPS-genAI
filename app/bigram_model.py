@@ -2,7 +2,7 @@ import spacy
 from typing import List, Dict, Any
 
 try:
-    nlp = spacy.load("en_core_web_lg")
+    nlp = spacy.load("en_core_web_md")
     SPACY_AVAILABLE = True
 except Exception:
     print("spaCy model failed to load. NLP functionality unavailable.")
