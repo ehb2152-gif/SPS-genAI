@@ -2,7 +2,7 @@ fastapi
 uvicorn[standard]
 torch
 torchvision
+numpy
 spacy
 Pillow
 python-multipart
-numpy<2

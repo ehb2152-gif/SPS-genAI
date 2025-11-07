@@ -1,23 +1,29 @@
 # Use an official Python runtime as a parent image
-FROM python:3.12-slim
+FROM python:3.10-slim
 
 # Set the working directory in the container
-WORKDIR /app
+WORKDIR /code
 
-# Install build tools (like g++) needed to compile packages like 'thinc'
-RUN apt-get update && apt-get install -y build-essential
+# Copy the requirements file and install dependencies
+COPY ./requirements.txt /code/requirements.txt
 
-# Copy the requirements file into the container first
-COPY requirements.txt .
+# Install all dependencies from requirements.txt
+# We force torch to install the CPU-only version to keep the image small
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt \
+    && pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy your application code into the container
+# This copies main.py and all helpers in the 'app' folder
+COPY ./app /code/app
 
-# Download the correct spaCy model
-RUN python -m spacy download en_core_web_md
+# Copy your trained models into the container
+COPY ./checkpoints /code/checkpoints
+# The `COPY ./app` command above will also copy all .pth files
+# inside app folder (ebm_model.pth, generator.pth, etc.)
 
-# Copy the rest of the application code, including the trained models
-COPY . .
+# Expose the port the app runs on
+EXPOSE 8000
 
 # Command to run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+# It looks for the 'app' variable inside the 'app.main' module
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
