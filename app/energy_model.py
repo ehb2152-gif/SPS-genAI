@@ -1,3 +1,4 @@
+from pathlib import Path
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
@@ -5,7 +6,12 @@ import io
 from app.model import get_model # Import our factory function
 
 # Model Loading 
-MODEL_PATH = "app/ebm_model.pth"
+
+# Get the directory where this script (energy_model.py) is located
+BASE_DIR = Path(__file__).resolve().parent 
+# Build a full, absolute path to the model file
+MODEL_PATH = BASE_DIR / "ebm_model.pth"
+
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Get the EBM model structure from our factory
@@ -14,8 +20,9 @@ model.eval()
 
 try:
     # Load the trained weights
+    print(f"Loading EBM model from: {MODEL_PATH}")
     model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
-    print("Loaded trained EBM model from ebm_model.pth")
+    print("Loaded trained EBM model successfully.")
 except FileNotFoundError:
     print(f"WARNING: Model file not found at {MODEL_PATH}.")
     print("The /get_image_energy/ endpoint will not work.")

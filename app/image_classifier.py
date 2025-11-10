@@ -1,3 +1,4 @@
+from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -41,8 +42,15 @@ transform = transforms.Compose([
 
 # Load the newly trained model
 model = FinalCNN(num_classes=10)
+
+# Get the directory where this script (image_classifier.py) is located
+BASE_DIR = Path(__file__).resolve().parent 
+# Build a full, absolute path to the model file
+MODEL_PATH = BASE_DIR / "final_cnn_model.pth"
+
 # Load the new weights file
-model.load_state_dict(torch.load('app/final_cnn_model.pth', map_location=torch.device('cpu')))
+print(f"Loading CNN model from: {MODEL_PATH}")
+model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu')))
 model.eval()
 
 # Define the CIFAR-10 class names

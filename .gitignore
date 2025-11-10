@@ -1,4 +1,35 @@
+# Python virtual environment
+venv/
+cnn_project/
+*.venv/
+
+# Python cache
 __pycache__/
+
+# Jupyter Notebook checkpoints
 .ipynb_checkpoints/
+
+# Data folders (These are for training, not needed for inference)
 data/
+ebm_samples/
+diffusion_samples/
+checkpoints/
+
+# IDE/Editor files
+.vscode/
+.idea/
+
+# Mac files
+.DS_Store
+
+# --- Model Files ---
+# Ignore ALL .pth files...
 *.pth
+
+# ...EXCEPT for the specific ones inside the app/ directory
+# that our Docker container needs to run.
+!app/final_cnn_model.pth
+!app/generator.pth
+!app/ebm_model.pth
+!app/diffusion_model.pth/diffusion_epoch_001.pth
+!app/diffusion_model.pth/diffusion_epoch_002.pth

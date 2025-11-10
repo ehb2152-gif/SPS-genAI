@@ -1,10 +1,16 @@
+from pathlib import Path
 import torch
 import io
 from torchvision.utils import save_image
 from app.model import Generator  # Imports the Generator class from app/model.py
 
 # Model Loading 
-MODEL_PATH = "generator.pth" 
+
+# Get the directory where this script (generator.py) is located
+BASE_DIR = Path(__file__).resolve().parent 
+# Build a full, absolute path to the model file (e.g., /code/app/generator.pth)
+MODEL_PATH = BASE_DIR / "generator.pth"
+
 DEVICE = "cpu"
 
 # Load the model structure and set it to evaluation mode

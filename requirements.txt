@@ -1,8 +1,13 @@
 fastapi
 uvicorn[standard]
-torch
-torchvision
 numpy
 spacy
 Pillow
 python-multipart
+
+# Use --extra-index-url to ADD the PyTorch index
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Installs CPU-only versions of torch and torchvision
+torch
+torchvision
